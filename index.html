@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<HTML>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.2.228/pdf.min.js"></script>
+
+
+
+
+<div id="TextBox">
+	<textarea id="EDITOR" onkeyup="ChangeEDITOR();" placeholder="Syntax goes HERE" autofocus onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
+	</textarea>
+	<textarea id="Linecount" class="noselect" disabled>1
+	</textarea>
+
+<div id="logical_dragg_main1"></div>
+</div>
+
+<div class="logical_dragg" id="logical_dragg_main">
+	<div class="visual_dragg" id="visual_dragg_main" draggable="true" ondragend="dropped_dragger(this)"></div>
+</div>
+
+<div id="PdfViewer">
+	<button onclick="Reload(document.getElementById('EDITOR').value);" class="control_panlel_button" style="left:0.5rem; right:auto; top:0.5rem;">Reload</button>
+		<div id="actual_pdf_holder"></div>
+	<div id="logical_dragg_main2"></div>
+	<button onclick="downloadPDF();" class="control_panlel_button" style="left:0.5rem; right:auto;">Download PDF</button>
+</div>
+
+
+<style>
+body{
+overflow: hidden;
+}
+
+#TextBox{
+height:100%;
+width:50%;
+float:left;
+background-color:gray;
+margin:0;
+padding:0;
+border:0;
+position:absolute;
+left:0;
+top:0;
+}
+
+#EDITOR{
+position:absolute;
+height:100%;
+width:95%;
+margin:0;
+margin-left:5%;
+padding:0px;
+border: 0;
+left:0;
+top:0;
+font-family:Roboto;
+font-size:23px;
+resize: none;
+background-color:#00003A;
+white-space: pre;
+color:gray;
+}
+#EDITOR::selection {
+  background: #282862;
+  color: lightgray;
+}
+
+#Linecount{
+position:absolute;
+height:100%;
+width:5%;
+margin:0;
+padding:0px;
+border: 0;
+left:0;
+top:0;
+font-family:Roboto;
+font-size:23px;
+resize: none;
+background-color:navy;
+white-space: pre;
+color:#2828A8;
+overflow: hidden;
+z-index:1;
+}
+
+.logical_dragg{
+position:absolute;
+width:0;
+height:0;
+float:left;
+left:50%;
+top:50%;
+background-color:blue;
+}
+
+.visual_dragg{
+position:relative;
+height:10vh;
+width:3vh;
+margin-top:-5vh;
+margin-left:-1.5vh;
+border-radius:1000px;
+background-color:lightgray;
+cursor:pointer;
+z-index:3;
+}
+
+
+
+#PdfViewer{
+height:100%;
+width:50%;
+float:right;
+background-color:#3A3B3C;
+margin:0;
+padding:0;
+border:0;
+position:absolute;
+right:0;
+top:0;
+}
+
+#actual_pdf_holder{
+width:100%;
+height:90%;
+position:absolute;
+bottom:0;
+background-color:gray;
+}
+
+.pdf{
+width:100%;
+height:100%;
+}
+
+
+.control_panlel_button{
+position:absolute;
+bottom:0.5rem;
+right: 0.5rem;
+border-radius:25px;
+height:39px;
+width:auto;
+font-size:15px;
+font-weight:bold;
+color:navy;
+background-color:white;
+  background-color: #405cf5;
+  border-radius: 25px;
+  border-width: 0;
+  box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif;
+  font-size: 100%;
+  line-height: 1.15;
+  outline: none;
+  padding: 0 25px;
+  text-align: center;
+  text-transform: none;
+  transform: translateZ(0);
+  transition: all .2s,box-shadow .08s ease-in;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.control_panlel_button:disabled {
+  cursor: default;
+}
+
+.control_panlel_button:hover{
+  background-color: #439cf5;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+
+
+.loader {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+  margin:15px auto;
+  position: relative;
+  color: navy;
+  box-sizing: border-box;
+  animation: animloader 1s linear infinite alternate;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow: -38px -12px ,  -14px 0,  14px 0, 38px 0;
+  }
+  33% {
+    box-shadow: -38px 0px, -14px -12px,  14px 0, 38px 0;
+  }
+  66% {
+    box-shadow: -38px 0px , -14px 0, 14px -12px, 38px 0;
+  }
+  100% {
+    box-shadow: -38px 0 , -14px 0, 14px 0 , 38px -12px;
+  }
+}
+
+.pdf{
+ @dragover.prevent
+}
+
+</style>
+
+
+
+<script>
+// mouse position here
+var mousepos_x = null;
+var mousepos_y = null;
+document.addEventListener('mousemove', onMouseUpdate, false);
+	function onMouseUpdate(e) {
+	  mousepos_x = e.pageX;
+	  mousepos_y = e.pageY;
+	}
+	function getMouseX() {
+	  return mousepos_x;
+	}
+	function getMouseY() {
+	  return mousepos_y;
+	}
+
+
+
+// visual DRAGG functionality here
+function dropped_dragger(elem){
+	setTimeout(function() {
+		// calsulate percentages
+		let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+		let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+		percent_left = getMouseX()/vw
+		percent_top = getMouseY()/vh
+		// actually adjust the logical dragger
+		elem.parentElement.style.left = percent_left*100 + "%";
+		elem.parentElement.style.top = percent_top*100 + "%";
+		// adjust the other elements, here a div has to be placed in each neighbouring window (that is to be modifyed in size), these divs have to be called "logical dragger id" + "1/2"
+		document.getElementById(elem.parentElement.id + "1").parentElement.style.width = percent_left*100 + "%";
+		document.getElementById(elem.parentElement.id + "2").parentElement.style.width = 100 - percent_left*100 + "%";
+	}, 100);
+}
+// prevents all draggable objects from deafulting to animate fade back
+document.addEventListener('dragover', function(e) { e.preventDefault() })
+
+
+
+// CHANGE of EDITOR handeled here
+ChangeEDITOR();
+function ChangeEDITOR(){
+	//update linecount on the left
+	elemEDITOR = document.getElementById("EDITOR");
+	elemLINES = document.getElementById("Linecount");
+	Rows = elemEDITOR.value.split("\n").length;
+	LinesString = "";
+	for(i = 1; i <= Rows-1; i++){
+		LinesString += i + "\n";
+	}
+	LinesString += Rows; // last line gets SPECIAL treatment
+	elemLINES.innerHTML = LinesString;
+}
+
+// to sync the scrolling of the EDITOR and Lineschange Divs
+elemEDITOR = document.getElementById("EDITOR");
+elemLINES = document.getElementById("Linecount");
+var isSyncingLeftScroll = false;
+var isSyncingRightScroll = false;
+var leftDiv = elemLINES;
+var rightDiv = elemEDITOR;
+leftDiv.onscroll = function() {
+  if (!isSyncingLeftScroll) {
+    isSyncingRightScroll = true;
+    rightDiv.scrollTop = this.scrollTop;
+  }
+  isSyncingLeftScroll = false;
+}
+rightDiv.onscroll = function() {
+  if (!isSyncingRightScroll) {
+    isSyncingLeftScroll = true;
+    leftDiv.scrollTop = this.scrollTop;
+  }
+  isSyncingRightScroll = false;
+}
+
+
+
+
+
+var PDF_SCROLL = 0
+
+// RELOAD handeled HERE
+var data0 = [];
+function Reload(content){
+	try{
+		document.getElementById("actual_pdf_holder").innerHTML = '<span class="loader"></span>';
+		postData1("http://localhost:8080/getPDF", {"info" : JSON.stringify(content)}).then((data) => {
+				data0[0] = data.data[0];
+				data0[1] = data.data[1];
+				var base64String = "data:application/pdf;base64," + data0[1];
+				document.getElementById("actual_pdf_holder").innerHTML =  '<object class="pdf" id="pdfID" data="' + base64String +  '"width="800"height="500"></object>';
+				console.log("Here 1")
+				// TO BE DONE !!!!!!
+				console.log(document.getElementById("pdfID").children)
+				console.log(document.getElementById("pdfID").contentDocument)
+				console.log(document.getElementById("pdfID").contentDocument)
+				console.log(document.getElementById("pdfID").querySelectorAll("p"));
+				document.getElementById("viewer").scrollTop = PDF_SCROLL;
+				document.getElementById("viewer").onscroll = function(){PDF_SCROLL = this.scrollTop; console.log(this.scrollTop)}; // prevent pdf viewer from messing up DRAG DROPP mechanics
+				});
+	}
+	catch(err){
+		console.log("error while fetching DATA");
+	}
+}
+
+
+
+// Example POST method implementation:
+async function postData1(url = "", data = {}) {
+  // Default options are marked with *
+  const response = await fetch(url, {
+    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    mode: "cors", // no-cors, *cors, same-origin
+    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: "same-origin", // include, *same-origin, omit
+    headers: {
+      "Content-Type": "application/json",
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    redirect: "follow", // manual, *follow, error
+    referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+    body: JSON.stringify(data), // body data type must match "Content-Type" header
+  });
+  console.log("HERE");
+  return response.json(); // parses JSON response into native JavaScript objects
+}
+
+
+// DOWNLOAD PDF HERE
+function downloadPDF() {
+  var base64String = "data:application/pdf;base64," + data0[1];
+  //console.log(base64String);
+  const downloadLink = document.createElement("a");
+  downloadLink.href = base64String;
+  downloadLink.download = "Tex.pdf";
+  downloadLink.click();
+}
+
+
+
+</script>
+
+
+
+</HTML>
